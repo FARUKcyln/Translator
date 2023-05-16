@@ -16,6 +16,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.databinding.DataBindingUtil
@@ -23,7 +24,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.translator.R
 import com.example.translator.databinding.FragmentMainBinding
-import com.google.mlkit.common.model.RemoteModelManager
+import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
@@ -82,7 +83,9 @@ class MainFragment : Fragment() {
             .setTargetLanguage(TranslateLanguage.ENGLISH).build()
         val turkishEnglishTranslator = Translation.getClient(options)
 
-        turkishEnglishTranslator.downloadModelIfNeeded().addOnSuccessListener {
+        var conditions = DownloadConditions.Builder().build()
+
+        turkishEnglishTranslator.downloadModelIfNeeded(conditions).addOnSuccessListener {
             // no-op
             println("Successfull")
         }.addOnFailureListener { exception ->
@@ -123,13 +126,13 @@ class MainFragment : Fragment() {
                 val matches: ArrayList<String> =
                     p0?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) as ArrayList<String>
 
-                if (matches[0].isNotEmpty()){
-                    adapter.add(SpeechToItem())
+                if (matches[0].isNotEmpty()) {
+                    adapter.add(SpeechToItem(matches[0]))
                 }
                 turkishEnglishTranslator.translate(matches[0])
                     .addOnSuccessListener { translatedText ->
                         binding.text.setText(translatedText)
-                        adapter.add(SpeechFromItem())
+                        adapter.add(SpeechFromItem(translatedText))
                     }.addOnFailureListener { exception ->
                         println()
                         Log.d("Translation", exception.toString())
@@ -167,7 +170,7 @@ class MainFragment : Fragment() {
             }
 
             override fun afterTextChanged(p0: Editable?) {
-                if (isListening){
+                if (isListening) {
                     Handler(Looper.getMainLooper()).postDelayed({
                         binding.microphone.performClick()
                     }, 2000)
@@ -222,9 +225,9 @@ class MainFragment : Fragment() {
 
 }
 
-class SpeechFromItem : Item<GroupieViewHolder>(){
+class SpeechFromItem(private val text: String) : Item<GroupieViewHolder>() {
     override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-
+        viewHolder.itemView.findViewById<TextView>(R.id.text).text = text
     }
 
     override fun getLayout(): Int {
@@ -232,9 +235,9 @@ class SpeechFromItem : Item<GroupieViewHolder>(){
     }
 }
 
-class SpeechToItem : Item<GroupieViewHolder>(){
+class SpeechToItem(private val text: String) : Item<GroupieViewHolder>() {
     override fun bind(viewHolder: GroupieViewHolder, position: Int) {
-
+        viewHolder.itemView.findViewById<TextView>(R.id.text).text = text
     }
 
     override fun getLayout(): Int {
