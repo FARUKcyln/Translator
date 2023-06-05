@@ -83,7 +83,7 @@ class MainFragment : Fragment() {
             .setTargetLanguage(TranslateLanguage.ENGLISH).build()
         val turkishEnglishTranslator = Translation.getClient(options)
 
-        var conditions = DownloadConditions.Builder().build()
+        val conditions = DownloadConditions.Builder().build()
 
         turkishEnglishTranslator.downloadModelIfNeeded(conditions).addOnSuccessListener {
             // no-op
