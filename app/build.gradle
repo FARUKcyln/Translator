@@ -47,6 +47,9 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     implementation 'com.google.mlkit:translate:17.0.1'
 
+    // Use this dependency to use the dynamically downloaded model in Google Play Services
+    implementation 'com.google.android.gms:play-services-mlkit-language-id:17.0.0'
+
     implementation "com.github.lisawray.groupie:groupie:2.8.0"
     implementation "com.github.lisawray.groupie:groupie-databinding:2.8.0"
 }
