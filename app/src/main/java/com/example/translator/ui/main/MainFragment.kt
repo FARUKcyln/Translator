@@ -78,14 +78,14 @@ class MainFragment : Fragment() {
         binding.history.layoutManager = LinearLayoutManager(requireContext())
         binding.history.adapter = adapter
 
-        // Create an English-German translator:
+        // Create an translator:
         val options = TranslatorOptions.Builder().setSourceLanguage(TranslateLanguage.TURKISH)
             .setTargetLanguage(TranslateLanguage.ENGLISH).build()
-        val turkishEnglishTranslator = Translation.getClient(options)
+        val translator = Translation.getClient(options)
 
         val conditions = DownloadConditions.Builder().build()
 
-        turkishEnglishTranslator.downloadModelIfNeeded(conditions).addOnSuccessListener {
+        translator.downloadModelIfNeeded(conditions).addOnSuccessListener {
             // no-op
             println("Successfull")
         }.addOnFailureListener { exception ->
@@ -129,7 +129,22 @@ class MainFragment : Fragment() {
                 if (matches[0].isNotEmpty()) {
                     adapter.add(SpeechToItem(matches[0]))
                 }
-                turkishEnglishTranslator.translate(matches[0])
+
+                /*val languageIdentifier = LanguageIdentification.getClient()
+                languageIdentifier.identifyLanguage(matches[0])
+                    .addOnSuccessListener { languageCode ->
+                        if (languageCode == "und") {
+                            Log.i("Error", "Can't identify language.")
+                        } else {
+                            Log.i("Language Code", "Language: $languageCode")
+                        }
+                    }
+                    .addOnFailureListener {
+                        // Model couldn’t be loaded or other internal error.
+                        // ...
+                    }*/
+
+                translator.translate(matches[0])
                     .addOnSuccessListener { translatedText ->
                         binding.text.setText(translatedText)
                         adapter.add(SpeechFromItem(translatedText))
