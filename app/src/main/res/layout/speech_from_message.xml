@@ -26,7 +26,7 @@
                 android:layout_marginStart="10dp"
                 android:text="deneme"
                 android:textColor="@color/white"
-                android:textSize="30sp" />
+                android:textSize="20sp" />
         </RelativeLayout>
 
     </androidx.cardview.widget.CardView>

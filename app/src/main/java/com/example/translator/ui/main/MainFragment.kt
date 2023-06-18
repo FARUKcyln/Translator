@@ -24,9 +24,11 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.translator.R
 import com.example.translator.databinding.FragmentMainBinding
+import com.example.translator.ui.selectLanguage.SelectLanguagesFragment
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
+import com.google.mlkit.nl.translate.Translator
 import com.google.mlkit.nl.translate.TranslatorOptions
 import com.xwray.groupie.GroupAdapter
 import com.xwray.groupie.GroupieViewHolder
@@ -34,7 +36,7 @@ import com.xwray.groupie.Item
 import java.util.*
 
 
-class MainFragment : Fragment() {
+class MainFragment(private val translator: Translator) : Fragment() {
 
     private lateinit var binding: FragmentMainBinding
     private lateinit var speechRecognizer: SpeechRecognizer
@@ -42,10 +44,6 @@ class MainFragment : Fragment() {
     private lateinit var textToSpeech: TextToSpeech
     private var isListening = false
     private val adapter = GroupAdapter<GroupieViewHolder>()
-
-    companion object {
-        fun newInstance() = MainFragment()
-    }
 
 
     override fun onCreateView(
@@ -77,22 +75,6 @@ class MainFragment : Fragment() {
 
         binding.history.layoutManager = LinearLayoutManager(requireContext())
         binding.history.adapter = adapter
-
-        // Create an translator:
-        val options = TranslatorOptions.Builder().setSourceLanguage(TranslateLanguage.TURKISH)
-            .setTargetLanguage(TranslateLanguage.ENGLISH).build()
-        val translator = Translation.getClient(options)
-
-        val conditions = DownloadConditions.Builder().build()
-
-        translator.downloadModelIfNeeded(conditions).addOnSuccessListener {
-            // no-op
-            println("Successfull")
-        }.addOnFailureListener { exception ->
-            println("Hata")
-            Log.d("MainFragment", exception.toString())
-            requireActivity().finish()
-        }
 
         speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext())
         speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
@@ -130,20 +112,6 @@ class MainFragment : Fragment() {
                     adapter.add(SpeechToItem(matches[0]))
                 }
 
-                /*val languageIdentifier = LanguageIdentification.getClient()
-                languageIdentifier.identifyLanguage(matches[0])
-                    .addOnSuccessListener { languageCode ->
-                        if (languageCode == "und") {
-                            Log.i("Error", "Can't identify language.")
-                        } else {
-                            Log.i("Language Code", "Language: $languageCode")
-                        }
-                    }
-                    .addOnFailureListener {
-                        // Model couldn’t be loaded or other internal error.
-                        // ...
-                    }*/
-
                 translator.translate(matches[0])
                     .addOnSuccessListener { translatedText ->
                         binding.text.setText(translatedText)
@@ -165,7 +133,12 @@ class MainFragment : Fragment() {
             requireActivity().applicationContext
         ) { status ->
             if (status != TextToSpeech.ERROR) {
-                textToSpeech.language = Locale.US
+                val supportedLanguages = textToSpeech.availableLanguages
+                supportedLanguages.forEach { language ->
+                    if (language.language.equals(SelectLanguagesFragment.outputLanguage.toString())) {
+                        textToSpeech.language = language
+                    }
+                }
             }
         }
 
