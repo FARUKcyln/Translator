@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -44,6 +45,8 @@ class MainFragment(private val translator: Translator) : Fragment() {
     private lateinit var textToSpeech: TextToSpeech
     private var isListening = false
     private val adapter = GroupAdapter<GroupieViewHolder>()
+    private var startTime : Long = 0
+    private var elapsedTime : Long = 0;
 
 
     override fun onCreateView(
@@ -82,7 +85,7 @@ class MainFragment(private val translator: Translator) : Fragment() {
             RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM
         )
 
-        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,SelectLanguagesFragment.inputLanguage.toString())
 
         speechRecognizer.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(p0: Bundle?) {
@@ -98,12 +101,16 @@ class MainFragment(private val translator: Translator) : Fragment() {
             }
 
             override fun onEndOfSpeech() {
+                startTime = SystemClock.elapsedRealtime()
             }
 
             override fun onError(p0: Int) {
             }
 
             override fun onResults(p0: Bundle?) {
+
+                elapsedTime = SystemClock.elapsedRealtime() - startTime
+                println("Speech To Text Time: $elapsedTime ms")
 
                 val matches: ArrayList<String> =
                     p0?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION) as ArrayList<String>
@@ -112,6 +119,7 @@ class MainFragment(private val translator: Translator) : Fragment() {
                     adapter.add(SpeechToItem(matches[0]))
                 }
 
+                startTime = SystemClock.elapsedRealtime()
                 translator.translate(matches[0])
                     .addOnSuccessListener { translatedText ->
                         binding.text.setText(translatedText)
@@ -120,6 +128,8 @@ class MainFragment(private val translator: Translator) : Fragment() {
                         println()
                         Log.d("Translation", exception.toString())
                     }
+                elapsedTime = SystemClock.elapsedRealtime() - startTime
+                println("Translation Time: $elapsedTime ms")
             }
 
             override fun onPartialResults(p0: Bundle?) {
@@ -141,6 +151,7 @@ class MainFragment(private val translator: Translator) : Fragment() {
                 }
             }
         }
+
 
         binding.text.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(p0: CharSequence?, p1: Int, p2: Int, p3: Int) {
